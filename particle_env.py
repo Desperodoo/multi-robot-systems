@@ -219,22 +219,6 @@ class Pursuer(Agent):
                 self.x = x
                 self.y = y
                 self.v = v
-
-    # def sensor(self, boundary_obstacles, evader_pos, max_boundary_obstacle_num):
-    #     obstacle_adj, evader_adj = self.radar.rescan(
-    #         x=int(self.x), 
-    #         y=int(self.y), 
-    #         grid_map=self.grid_map,
-    #         boundary_obstacles=boundary_obstacles, 
-    #         evader_pos=evader_pos, 
-    #         max_boundary_obstacle_num=max_boundary_obstacle_num
-    #     )
-    #     # return obstacle_adj as list with shape of (obstacle_num, )
-    #     if obstacle_adj != self.raser_map[int(self.x)][int(self.y)].tolist():
-    #         print('obstacle_adj: ', obstacle_adj)
-    #         print('raser_map: ', self.raser_map[int(self.x)][int(self.y)])
-    #     assert obstacle_adj == self.raser_map[int(self.x)][int(self.y)].tolist()
-    #     return obstacle_adj, evader_adj
     
     def sensor(self, boundary_obstacles, evader_pos, max_boundary_obstacle_num):
         # return obstacle_adj as list with shape of (obstacle_num, )
@@ -329,16 +313,7 @@ class Evader(Agent):
 
         if len(path) >= 2:
             next_way_point = path[-2]
-            # self.path = path
         else:
-            # path not found, path = [s_start]
-            # if len(self.path) < 2:
-            #     next_way_point = (self.x, self.y)
-            # elif len(self.path) >= 3:
-            #     self.path.pop()
-            #     next_way_point = self.path[-2]
-            # else:
-            #     next_way_point = self.path[-2]
             next_way_point = path[0]
 
         return path, next_way_point, pred_map
@@ -357,7 +332,6 @@ class Evader(Agent):
 
 
 class ParticleEnv:
-    # def __init__(self, cfg: dict):
     def __init__(self):
         cfg = {
             'p_vmax': 0.5,
@@ -430,22 +404,6 @@ class ParticleEnv:
         self.max_boundary_obstacle_num = self.block_num * (6 * 7 - 4 * 5)
         self.boundary_obstacles = list()
         self.boundary_obstacle_num = None
-
-    # def gen_init_p_pos(self):
-    #     min_dist = 4
-    #     sample = []
-    #     while len(sample) < self.p_num:
-    #         newp = np.random.rand(2) * np.array([self.width - 1, self.height - 1])
-    #         if self.global_map.is_unoccupied(pos=newp):
-    #             collision = 0
-    #             for p in sample:
-    #                 if np.linalg.norm(newp - p) < min_dist:
-    #                     collision += 1
-    #                     break
-                    
-    #             if collision == 0:
-    #                 sample.append(newp)
-    #     return sample
     
     def gen_init_p_pos(self):
         min_dist = 4
