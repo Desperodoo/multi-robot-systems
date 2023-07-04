@@ -53,64 +53,6 @@ class Radar:
         self.beam_num = 40
         self.map_size = map_size
 
-    # def rescan(self, x, y, grid_map, boundary_obstacles, evader_pos, max_boundary_obstacle_num):
-    #     """_summary_
-
-    #     Args:
-    #         x (_type_): current x position
-    #         y (_type_): current y position
-    #         boundary_obstacles (_type_): /
-    #         evader_pos (_type_): evader_position
-    #         max_boundary_obstacle_num (_type_): /
-
-    #     Returns:
-    #         obj_adj: 1-d list
-    #         evader_adj: 1-d list
-    #     """
-    #     # Attention! Attention! Here we use the maximum obstacle number.
-        
-    #     obstacle_adj = np.zeros(shape=(max_boundary_obstacle_num,))
-    #     int_evader_pos = [[int(pos[0]), int(pos[1])] for pos in evader_pos]
-    #     evader_num = len(evader_pos)
-    #     evader_adj = np.zeros(shape=(evader_num,))
-    #     local_obstacles = list()
-    #     for obstacle in boundary_obstacles:
-    #         if np.linalg.norm([obstacle[0] - x, obstacle[1] - y]) <= self.range:
-    #             local_obstacles.append(obstacle)
-
-    #     for beam in range(self.beam_num):
-    #         beam_angle = beam * 2 * np.pi / self.beam_num
-    #         beam_dir_x = np.cos(beam_angle)
-    #         beam_dir_y = np.sin(beam_angle)
-    #         for beam_range in range(self.range):
-    #             beam_current_x = x + beam_range * beam_dir_x
-    #             beam_current_y = y + beam_range * beam_dir_y
-    #             if (beam_current_x < 0 or beam_current_x >= self.map_size[0] or beam_current_y < 0 or beam_current_y >= self.map_size[1]):
-    #                 break
-                
-    #             beam_current_pos = [int(beam_current_x), int(beam_current_y)]
-    #             if not grid_map.is_unoccupied(beam_current_pos):
-    #                 idx = boundary_obstacles.index(beam_current_pos)
-    #                 obstacle_adj[idx] = 1
-    #                 break
-                
-    #             if beam_current_pos in int_evader_pos:
-    #                 idx = int_evader_pos.index(beam_current_pos)
-    #                 evader_adj[idx] = 1
-    #     # for obstacle in local_obstacles:
-    #     #     if not self.is_obstacle_occluded(obstacle[0], obstacle[1], x, y, local_obstacles):
-    #     #         idx = boundary_obstacles.index(obstacle)
-    #     #         obstacle_adj[idx] = 1
- 
-    #     # for idx, pos in enumerate(evader_pos):
-    #     #     if (not self.is_obstacle_occluded(pos[0], pos[1], x, y, local_obstacles)) and \
-    #     #             (np.linalg.norm([pos[0] - x, pos[1] - y]) <= self.range):
-    #     #         evader_adj[idx] = 1
-
-    #     obstacle_adj = obstacle_adj.tolist()
-    #     evader_adj = evader_adj.tolist()
-    #     return obstacle_adj, evader_adj
-
     def rescan(self, x, y, boundary_obstacles, evader_pos, obstacle_adj):
         """_summary_
 
@@ -125,14 +67,8 @@ class Radar:
             obj_adj: 1-d list
             evader_adj: 1-d list
         """
-        # Attention! Attention! Here we use the maximum obstacle number.
-        
         evader_num = len(evader_pos)
         evader_adj = np.zeros(shape=(evader_num,))
-        # local_obstacles = list()
-        # for obstacle in boundary_obstacles:
-        #     if np.linalg.norm([obstacle[0] - x, obstacle[1] - y]) <= self.range:
-        #         local_obstacles.append(obstacle)
  
         for idx, pos in enumerate(evader_pos):
             if np.linalg.norm([pos[0] - x, pos[1] - y]) <= self.range:
@@ -146,54 +82,6 @@ class Radar:
 
         evader_adj = evader_adj.tolist()
         return evader_adj
-
-
-    # def is_obstacle_occluded(self, tx, ty, x, y, obstacles):
-    #     """_summary_
-
-    #     Args:
-    #         tx (int): x position of the checked obstacle
-    #         ty (int): y position of ...
-    #         x (int): x current position
-    #         y (int): y ...
-    #         obstacles (2-d list): local obstacles 
-
-    #     Returns:
-    #         occlued (bool): /
-    #     """
-    #     target_vertex = vertex(tx, ty, self.box_width)
-    #     occluded_list = list()
-    #     for (v_x, v_y) in target_vertex:
-    #         line1 = [(v_x, v_y), (x, y)]
-    #         occluded = False
-    #         for obstacle in obstacles:
-    #             # exclude obstacles that far away from the checked point
-    #             # line_center = [(obstacle[0], obstacle[1]), (x, y)]
-    #             # los_angle = self.arccos(line1=line1, line2=line_center)
-    #             # if (los_angle > np.pi / 6) or ([tx, ty] == obstacle):
-    #             #     continue
-                
-    #             if [tx, ty] == obstacle:
-    #                 continue
-
-    #             obstacle_vertex = vertex(obstacle[0], obstacle[1], self.box_width)
-    #             margin = [
-    #                 [obstacle_vertex[0], obstacle_vertex[1]],
-    #                 [obstacle_vertex[1], obstacle_vertex[2]],
-    #                 [obstacle_vertex[2], obstacle_vertex[3]],
-    #                 [obstacle_vertex[3], obstacle_vertex[0]]
-    #             ]
-    #             for line2 in margin:
-    #                 occluded = intersect(line1, line2)
-    #                 if occluded:
-    #                     break
-    #             if occluded:
-    #                 break
-    #         occluded_list.append(occluded)
-    #     if all(occluded_list):
-    #         return True
-    #     else:
-    #         return False
 
     def is_evader_occluded(self, tx, ty, x, y, obstacles):
         """_summary_
@@ -214,12 +102,6 @@ class Radar:
             line1 = [(v_x, v_y), (x, y)]
             occluded = False
             for obstacle in obstacles:
-                # exclude obstacles that far away from the checked point
-                # line_center = [(obstacle[0], obstacle[1]), (x, y)]
-                # los_angle = self.arccos(line1=line1, line2=line_center)
-                # if (los_angle > np.pi / 6) or ([tx, ty] == obstacle):
-                #     continue
-                
                 if [tx, ty] == obstacle:
                     continue
 
@@ -241,18 +123,6 @@ class Radar:
             return True
         else:
             return False
-
-    @staticmethod
-    def arccos(line1, line2):
-        line1 = np.array(line1)
-        line2 = np.array(line2)
-        vector1 = line1[0] - line1[1]
-        vector2 = line2[0] - line2[1]
-        cosin = np.dot(vector1, vector2) / (norm(vector1) * norm(vector2))
-        if cosin >= 1 or cosin <= -1:
-            print('cosin', cosin)
-            cosin = np.clip(cosin, -1, 1)
-        return np.arccos(cosin)
     
 
 # Discrete Version
