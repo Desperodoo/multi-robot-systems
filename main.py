@@ -3,7 +3,7 @@ import time
 import torch
 import random
 import numpy as np
-from envi import sim_moving
+from gif_plotting import sim_moving
 from particle_env import ParticleEnv
 import os
 
