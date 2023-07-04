@@ -1,6 +1,5 @@
 from particle_env import ParticleEnv
 import time
-import torch
 import random
 import numpy as np
 from gif_plotting import sim_moving
