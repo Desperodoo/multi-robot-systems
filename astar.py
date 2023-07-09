@@ -11,7 +11,7 @@ import heapq
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../../Search_based_Planning/")
 
-class AStar:
+class AStar_2D:
     """AStar set the cost + heuristics as the priority
     """
     def __init__(self, width, height, heuristic_type="manhattan"):
