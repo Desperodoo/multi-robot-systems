@@ -162,7 +162,7 @@ class OccupancyGridMap:
 
 class AStar_3D:
     #default using manhattan distance
-    def __init__(self,x,y,z) -> None:
+    def __init__(self) -> None:
         self.u_set = [(-1, -1, -1), (-1, -1, 0), (-1, -1, 1), (-1, 0, -1), 
                       (-1, 0, 0), (-1, 0, 1), (-1, 1, -1), (-1, 1, 0),
                       (-1, 1, 1), (0, -1, -1), (0, -1, 0), (0, -1, 1),
@@ -183,12 +183,10 @@ class AStar_3D:
         self.PARENT = None  # recorded parent
         self.g = None  # cost to come
         # self.path = None
-        self.x = x
-        self.y = y
-        self.z = z
     def is_collision(self, s_start, s_end):
         if s_start in self.extended_obs or s_end in self.extended_obs:
             return True
+        return False
         
     def heuristic(self, s):
         goal = self.s_goal
@@ -236,7 +234,7 @@ class AStar_3D:
             if s == self.s_start:
                 break
         return list(path)
-    def searching(self, s_start:tuple, s_goal:tuple,obs, extended_obs):
+    def searching(self, s_start:tuple, s_goal:tuple, extended_obs):
         self.s_start = s_start
         self.s_goal = s_goal
         self.extended_obs = extended_obs

@@ -1,7 +1,7 @@
 import time
 import numpy as np
 from numpy.linalg import norm
-from astar import AStar
+from astar import AStar_2D
 from copy import deepcopy
 import random
 import math
@@ -247,7 +247,7 @@ class Evader(Agent):
             sen_range=sen_range, comm_range=comm_range, global_map=global_map
         )
         self.is_pursuer = False
-        self.astar = AStar(width=global_map.x_dim, height=global_map.y_dim)
+        self.astar = AStar_2D(width=global_map.x_dim, height=global_map.y_dim)
         self.target = target
         # self.path = []
         
