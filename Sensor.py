@@ -99,7 +99,7 @@ def test_lidar_simulator():
     plt.ylabel('Y')
     plt.title('Sensor Simulation')
     plt.grid(True)
-    plt.show()
+    plt.savefig('sensor')
 
 
 if __name__ == '__main__':
