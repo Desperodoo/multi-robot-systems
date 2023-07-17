@@ -29,6 +29,12 @@ class OccupancyGridMap:
     def get_map(self) -> dict:
         return self.grid_map
 
+    def get_map_array(self) -> np.array:
+        return np.ones((100, 100))
+
+    def get_resolution(self) -> int:
+        return 1
+
     # convert the float point into the int point 
     def get_pos(self, pos: tuple) -> tuple:
         if self.is3D:
@@ -37,6 +43,9 @@ class OccupancyGridMap:
         else:
             point = (round(pos[0]), round(pos[1]))  # make sure pos is int
         return point
+
+    def index_to_pos(self, index: tuple) -> tuple[float, float]:
+        return index
 
     def is_unoccupied(self, pos) -> bool:
         """
