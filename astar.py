@@ -19,7 +19,8 @@ class AStar_2D:
 
         self.u_set = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                       (1, 0), (1, -1), (0, -1), (-1, -1)]
-
+        self.action_set = {(-1,0) : 0, (-1,1) : 1, (0, 1) : 2, (1,1) : 3,
+                           (1,0) : 4, (1,-1) : 5, (0, -1) : 6, (-1, -1) : 7}
         self.s_start = None
         self.s_goal = None
         self.obs = None  # position of obstacles
@@ -167,16 +168,16 @@ class AStar_2D:
         :return: The planning path
         """
 
-        path = [self.s_goal]
+        path = []
         s = self.s_goal
 
         while True:
-            s = PARENT[s]
-            path.append(s)
-
+            p = PARENT[s]
+            key = (p[0] - s[0], p[1] - s[1])
+            path.append(self.action_set.get(key))
+            s = p
             if s == self.s_start:
                 break
-
         return list(path)
 
     def heuristic(self, s):
