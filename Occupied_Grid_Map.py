@@ -27,14 +27,6 @@ class OccupancyGridMap:
         self.ex_moving_obstacles = list()
         # obstacles
         self.exploration_setting = exploration_setting
-<<<<<<< HEAD
-
-    def get_map(self) -> dict:
-        return self.grid_map
-
-    # convert the float point into the int point 
-    def get_pos(self, pos: tuple) -> tuple:
-=======
     # return whole map 
     def get_map(self):
         return self.grid_map
@@ -116,15 +108,12 @@ class OccupancyGridMap:
                 center_point = np.random.normal(center,self.boundaries[0] / 2,2)
                 self.add_blocker_type(center_point=center_point,data=shape_default[index],type=shape[index])
     def round_up(self, pos:tuple) -> tuple:
->>>>>>> d11d76e (add the obstacle initailize)
         if self.is3D:
             point = (round(pos[0]), round(pos[1]), round(pos[2]))  # make sure pos is int
 
         else:
             point = (round(pos[0]), round(pos[1]))  # make sure pos is int
         return point
-<<<<<<< HEAD
-=======
     
     def get_point_info(self,pos:tuple) -> int:
         if self.is3D:
@@ -149,7 +138,6 @@ class OccupancyGridMap:
         else:
             x , y  = self.round_up(pos)
             return x < self.boundaries[0] and x >= 0 and y < self.boundaries[1] and y >=0
->>>>>>> d11d76e (add the obstacle initailize)
 
     def is_unoccupied(self, pos) -> bool:
         """
@@ -276,21 +264,14 @@ class OccupancyGridMap:
 class AStar_3D:
     # default using manhattan distance
     def __init__(self) -> None:
-<<<<<<< HEAD
-        self.u_set = [(-1, -1, -1), (-1, -1, 0), (-1, -1, 1), (-1, 0, -1),
-=======
         
         self.u_set = [(-1, -1, -1), (-1, -1, 0), (-1, -1, 1), (-1, 0, -1), 
->>>>>>> d11d76e (add the obstacle initailize)
                       (-1, 0, 0), (-1, 0, 1), (-1, 1, -1), (-1, 1, 0),
                       (-1, 1, 1), (0, -1, -1), (0, -1, 0), (0, -1, 1),
                       (0, 0, -1), (0, 0, 1), (0, 1, -1), (0, 1, 0),
                       (0, 1, 1), (1, -1, -1), (1, -1, 0), (1, -1, 1),
                       (1, 0, -1), (1, 0, 1), (1, 1, -1), (1, 1, 0),
                       (1, 1, 1)
-<<<<<<< HEAD
-                      ]
-=======
                     ]
         
         self.action_set = {(-1, -1, -1) : 0, (-1, -1, 0) : 1, (-1, -1, 1) : 2, (-1, 0, -1) : 3, 
@@ -300,7 +281,6 @@ class AStar_3D:
                       (0, 1, 1) : 16, (1, -1, -1) : 17, (1, -1, 0) : 18, (1, -1, 1) : 19,
                       (1, 0, -1) : 20, (1, 0 , 0) : 21, (1, 0, 1) : 22, (1, 1, -1) : 23, (1, 1, 0) : 24,
                       (1, 1, 1) : 25}
->>>>>>> d11d76e (add the obstacle initailize)
         self.s_start = None
         self.s_goal = None
         self.obs = None
@@ -360,16 +340,10 @@ class AStar_3D:
         path = []
         s = self.s_goal
         while True:
-<<<<<<< HEAD
-            s = PARENT[s]
-            path.append(s)
-
-=======
             point = PARENT[s]
             (x , y, z) = (point[0] - s[0], point[1] - s[1], point[2] - s[2])
             s = point
             path.append(self.action_set.get((x,y,z)))
->>>>>>> d11d76e (add the obstacle initailize)
             if s == self.s_start:
                 break
         return list(path)
