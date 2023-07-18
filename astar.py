@@ -139,16 +139,8 @@ class AStar_2D:
         if s_end[0] < 0 or s_end[0] > self.width or s_end[1] < 0 or s_end[1] > self.height:
             return True
             
-        if s_start[0] != s_end[0] and s_start[1] != s_end[1]:
-            if s_end[0] - s_start[0] == s_start[1] - s_end[1]:
-                s1 = (min(s_start[0], s_end[0]), min(s_start[1], s_end[1]))
-                s2 = (max(s_start[0], s_end[0]), max(s_start[1], s_end[1]))
-            else:
-                s1 = (min(s_start[0], s_end[0]), max(s_start[1], s_end[1]))
-                s2 = (max(s_start[0], s_end[0]), min(s_start[1], s_end[1]))
-
-            if s1 in self.extended_obs or s2 in self.extended_obs:
-                return True
+        if s_end in self.obs or s_end in self.extended_obs:
+            return True
 
         return False
 
@@ -168,13 +160,13 @@ class AStar_2D:
         :return: The planning path
         """
 
-        path = []
+        
         s = self.s_goal
-
+        path = [s]
         while True:
             p = PARENT[s]
             key = (p[0] - s[0], p[1] - s[1])
-            path.append(self.action_set.get(key))
+            path.append(p)
             s = p
             if s == self.s_start:
                 break

@@ -53,7 +53,7 @@ class OccupancyGridMap:
                     for y in range(y_bound[0],y_bound[1]):
                         for z in range(z_bound[0],z_bound[1]):
                             if self.in_bound((x + center_point[0],y + center_point[1],z + center_point[2])):
-                                self.set_map_info((x + center_point[0],y + center_point[1],z + center_point[2]),OBSTACLE)
+                                self.set_obstacle([x + center_point[0],y + center_point[1],z + center_point[2]])
             elif type == 's':
                 for radius in range(0,data):
                     for phi in range(0,180):
@@ -64,7 +64,7 @@ class OccupancyGridMap:
                             x = int(radius * math.sin(p) * math.cos(r) + center_point[0])
                             y = radius * math.sin(p) * math.sin(r) + center_point[1]
                             if self.in_bound((x,y,z)):
-                                self.set_map_info((x,y,z),OBSTACLE)
+                                self.set_obstacle([x,y,z])
             elif type == 'c':
                 for radius in range(0,data[0]):
                     for high in range(0,data[1]):
@@ -74,7 +74,7 @@ class OccupancyGridMap:
                             y = math.sin(p) * radius + center_point[1]
                             z = high + center_point[2]
                             if self.in_bound((x,y,z)):
-                                self.set_map_info((x,y,z),OBSTACLE)
+                                self.set_obstacle([x,y,z])
         else:
             if type == 'r':
                 x_bound = (int(-data[0] / 2), int(data[0] / 2))
@@ -82,7 +82,7 @@ class OccupancyGridMap:
                 for x in range(x_bound[0],x_bound[1]):
                     for y in range(y_bound[0],y_bound[1]):
                         if self.in_bound((x + center_point[0],y+center_point[1])):
-                            self.set_map_info((x + center_point[0],y + center_point[1]),OBSTACLE)
+                            self.set_obstacle([x + center_point[0],y + center_point[1]])
             elif type == 'c':
                 for radius in range(0,data[0]):
                     for phi in range (0,360):
@@ -90,7 +90,7 @@ class OccupancyGridMap:
                         x = math.cos(p) + radius + center_point[0]
                         y = math.sin(p) + radius + center_point[1]
                         if self.in_bound((x,y)):
-                            self.set_map_info((x,y),OBSTACLE)
+                             self.set_obstacle([x,y])
     # convert the float point into the int point
     def initailize_obstacle(self,num, center = 20):
         if self.is3D:
@@ -303,7 +303,7 @@ class AStar_3D:
             return True
         if s_end[0] < 0 or s_end[0] >= self.width or s_end[1] < 0 or s_end[1] >= self.height or s_end[2] < 0 or s_end[2] >= self.depth:
             return True
-        if s_end in self.extended_obs:
+        if s_end in self.extended_obs or s_end in self.obs:
             return True
         return False
 
