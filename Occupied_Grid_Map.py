@@ -263,7 +263,7 @@ class OccupancyGridMap:
 
 class AStar_3D:
     # default using manhattan distance
-    def __init__(self) -> None:
+    def __init__(self,width,height,depth) -> None:
         
         self.u_set = [(-1, -1, -1), (-1, -1, 0), (-1, -1, 1), (-1, 0, -1), 
                       (-1, 0, 0), (-1, 0, 1), (-1, 1, -1), (-1, 1, 0),
@@ -273,7 +273,6 @@ class AStar_3D:
                       (1, 0, -1), (1, 0, 1), (1, 1, -1), (1, 1, 0),
                       (1, 1, 1)
                     ]
-        
         self.action_set = {(-1, -1, -1) : 0, (-1, -1, 0) : 1, (-1, -1, 1) : 2, (-1, 0, -1) : 3, 
                       (-1, 0, 0) : 4, (-1, 0, 1) : 5, (-1, 1, -1) : 6, (-1, 1, 0) : 7,
                       (-1, 1, 1) : 8, (0, -1, -1) : 9, (0, -1, 0) : 10, (0, -1, 1) : 11,
@@ -281,6 +280,9 @@ class AStar_3D:
                       (0, 1, 1) : 16, (1, -1, -1) : 17, (1, -1, 0) : 18, (1, -1, 1) : 19,
                       (1, 0, -1) : 20, (1, 0 , 0) : 21, (1, 0, 1) : 22, (1, 1, -1) : 23, (1, 1, 0) : 24,
                       (1, 1, 1) : 25}
+        self.width = width
+        self.height = height
+        self.depth = depth
         self.s_start = None
         self.s_goal = None
         self.obs = None
@@ -296,6 +298,12 @@ class AStar_3D:
 
     def is_collision(self, s_start, s_end):
         if s_start in self.extended_obs or s_end in self.extended_obs:
+            return True
+        if s_start[0] < 0 or s_start[0] >= self.width or s_start[1] < 0 or s_start[1] >= self.height or s_start[2] < 0 or s_start[2] >= self.depth:
+            return True
+        if s_end[0] < 0 or s_end[0] >= self.width or s_end[1] < 0 or s_end[1] >= self.height or s_end[2] < 0 or s_end[2] >= self.depth:
+            return True
+        if s_end in self.extended_obs:
             return True
         return False
 

@@ -33,7 +33,7 @@ class AStar_2D:
         self.width = width
         self.height = height
 
-    def searching(self, s_start: tuple, s_goal: tuple, obs, extended_obs, worker_id):
+    def searching(self, s_start: tuple, s_goal: tuple, obs, extended_obs):
         """
         A_star Searching.
         :return: path, visited order
