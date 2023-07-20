@@ -108,6 +108,17 @@ class OccupancyGridMap:
                 center_point = np.random.normal(center,self.boundaries[0] / 2,2)
                 self.add_blocker_type(center_point=center_point,data=shape_default[index],type=shape[index])
     def round_up(self, pos:tuple) -> tuple:
+
+    
+
+    def get_map_array(self) -> np.array:
+        return np.ones((100, 100))
+
+    def get_resolution(self) -> int:
+        return 1
+
+    # convert the float point into the int point 
+    def get_pos(self, pos: tuple) -> tuple:
         if self.is3D:
             point = (round(pos[0]), round(pos[1]), round(pos[2]))  # make sure pos is int
 
@@ -138,6 +149,9 @@ class OccupancyGridMap:
         else:
             x , y  = self.round_up(pos)
             return x < self.boundaries[0] and x >= 0 and y < self.boundaries[1] and y >=0
+
+    def index_to_pos(self, index: tuple) -> tuple[float, float]:
+        return index
 
     def is_unoccupied(self, pos) -> bool:
         """
