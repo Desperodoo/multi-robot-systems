@@ -1,18 +1,20 @@
 import numpy as np
-import copy
 from skimage.segmentation import find_boundaries
 import math
 import heapq
+import random
 
 OBSTACLE = 1
 UNOCCUPIED = 0
 
 
 class OccupancyGridMap:
-    def __init__(self, is3D: bool, new_grid=None, obstacles=None, exploration_setting='8N') -> None:
+
+    def __init__(self, is3D: bool, boundaries:tuple, new_grid=None, obstacles = None,exploration_setting='8N' ) -> None:
         self.is3D = is3D
-        if new_grid is None:
-            self.grid_map = {}
+        self.boundaries = boundaries
+        if new_grid == None:
+            self.grid_map = np.zeros(shape=boundaries)
         else:
             self.grid_map = new_grid
         if obstacles is None:
@@ -25,9 +27,89 @@ class OccupancyGridMap:
         self.ex_moving_obstacles = list()
         # obstacles
         self.exploration_setting = exploration_setting
-
-    def get_map(self) -> dict:
+    # return whole map 
+    def get_map(self):
         return self.grid_map
+    '''
+    param:
+    center_point -> (int,int,int) the center point of the obstacle
+    type: -> str shape of the obstacle
+        in 2D case: 
+            r -> rectangle, data ->(x, y)
+            c -> circle, data ->(radius)
+        in 3D case:
+            r -> rectangle, data ->(x,y,z)
+            s -> sphere, data ->(radius)
+            c -> cylindar, data -> (radius, high) 
+
+    '''
+    def add_blocker_type(self, center_point:tuple, data: tuple, type:str ):
+        if self.is3D:
+            if type == 'r':
+                x_bound = (int(-data[0] / 2), int(data[0] / 2))
+                y_bound = (int(-data[1] / 2), int(data[0] / 2))
+                z_bound = (int(-data[2] / 2), int(data[2] / 2))
+                for x in range(x_bound[0],x_bound[1]):
+                    for y in range(y_bound[0],y_bound[1]):
+                        for z in range(z_bound[0],z_bound[1]):
+                            if self.in_bound((x + center_point[0],y + center_point[1],z + center_point[2])):
+                                self.set_obstacle([x + center_point[0],y + center_point[1],z + center_point[2]])
+            elif type == 's':
+                for radius in range(0,data):
+                    for phi in range(0,180):
+                        for rho in range(0,360):
+                            p = math.radians(phi)
+                            r = math.radians(rho)
+                            z = int(radius * math.cos(p) + center_point[2])
+                            x = int(radius * math.sin(p) * math.cos(r) + center_point[0])
+                            y = radius * math.sin(p) * math.sin(r) + center_point[1]
+                            if self.in_bound((x,y,z)):
+                                self.set_obstacle([x,y,z])
+            elif type == 'c':
+                for radius in range(0,data[0]):
+                    for high in range(0,data[1]):
+                        for phi in range(0,360):
+                            p = math.radians(phi)
+                            x = math.cos(p) * radius + center_point[0]
+                            y = math.sin(p) * radius + center_point[1]
+                            z = high + center_point[2]
+                            if self.in_bound((x,y,z)):
+                                self.set_obstacle([x,y,z])
+        else:
+            if type == 'r':
+                x_bound = (int(-data[0] / 2), int(data[0] / 2))
+                y_bound = (int(-data[1] / 2), int(data[0] / 2))
+                for x in range(x_bound[0],x_bound[1]):
+                    for y in range(y_bound[0],y_bound[1]):
+                        if self.in_bound((x + center_point[0],y+center_point[1])):
+                            self.set_obstacle([x + center_point[0],y + center_point[1]])
+            elif type == 'c':
+                for radius in range(0,data[0]):
+                    for phi in range (0,360):
+                        p = math.radians(phi)
+                        x = math.cos(p) + radius + center_point[0]
+                        y = math.sin(p) + radius + center_point[1]
+                        if self.in_bound((x,y)):
+                             self.set_obstacle([x,y])
+    # convert the float point into the int point
+    def initailize_obstacle(self,num, center = 20):
+        if self.is3D:
+            shape_default = [(3,3,3),(3,3),(3)]
+            shape = ['r','c','s']
+            for _ in range(num):
+                index = random.randrange(len(shape))
+                center_point = np.random.normal(center,self.boundaries[0] / 2,3)
+                self.add_blocker_type(center_point=center_point,data=shape_default[index],type=shape[index])
+        else:
+            shape_default = [(3,3,3),(3,3)]
+            shape = ['r','c']
+            for _ in range(num):
+                index = random.randrange(len(shape))
+                center_point = np.random.normal(center,self.boundaries[0] / 2,2)
+                self.add_blocker_type(center_point=center_point,data=shape_default[index],type=shape[index])
+    def round_up(self, pos:tuple) -> tuple:
+
+    
 
     def get_map_array(self) -> np.array:
         return np.ones((100, 100))
@@ -43,6 +125,30 @@ class OccupancyGridMap:
         else:
             point = (round(pos[0]), round(pos[1]))  # make sure pos is int
         return point
+    
+    def get_point_info(self,pos:tuple) -> int:
+        if self.is3D:
+            x, y, z = self.round_up(pos)
+            return self.grid_map[x][y][z]
+        else:
+            x, y = self.round_up(pos)
+            return self.grid_map[x][y]
+    
+    def set_map_info(self,pos:tuple, value):
+        if self.is3D:
+            x,y,z = self.round_up(pos)
+            self.grid_map[x][y][z] = value
+        else:
+            x, y = self.round_up(pos)
+            self.grid_map[x][y] = value
+    
+    def in_bound(self,pos:tuple):
+        if self.is3D:
+            x, y, z = self.round_up(pos)
+            return x < self.boundaries[0] and x >= 0 and y < self.boundaries[1] and y >= 0 and z < self.boundaries[2] and z >=0
+        else:
+            x , y  = self.round_up(pos)
+            return x < self.boundaries[0] and x >= 0 and y < self.boundaries[1] and y >=0
 
     def index_to_pos(self, index: tuple) -> tuple[float, float]:
         return index
@@ -99,9 +205,8 @@ class OccupancyGridMap:
         :param pos: cell position we wish to set obstacle
         :return: None
         """
-        point = self.get_pos(pos)
-        print(point)
-        self.grid_map[point] = OBSTACLE
+        point = self.round_up(pos)
+        self.set_map_info(point,OBSTACLE)
         if point not in self.obstacles:
             self.obstacles.append(point)
 
@@ -141,8 +246,9 @@ class OccupancyGridMap:
         :param pos: position of obstacle
         :return: None
         """
-        point = self.get_pos(pos)
-        self.grid_map.pop(point)
+        point = self.round_up(pos)
+        self.obstacles.remove(pos)
+        self.set_map_info(point,UNOCCUPIED)
 
     def local_observation(self, global_position: tuple, view_range: int) -> dict:
         """
@@ -171,15 +277,26 @@ class OccupancyGridMap:
 
 class AStar_3D:
     # default using manhattan distance
-    def __init__(self) -> None:
-        self.u_set = [(-1, -1, -1), (-1, -1, 0), (-1, -1, 1), (-1, 0, -1),
+    def __init__(self,width,height,depth) -> None:
+        
+        self.u_set = [(-1, -1, -1), (-1, -1, 0), (-1, -1, 1), (-1, 0, -1), 
                       (-1, 0, 0), (-1, 0, 1), (-1, 1, -1), (-1, 1, 0),
                       (-1, 1, 1), (0, -1, -1), (0, -1, 0), (0, -1, 1),
                       (0, 0, -1), (0, 0, 1), (0, 1, -1), (0, 1, 0),
                       (0, 1, 1), (1, -1, -1), (1, -1, 0), (1, -1, 1),
                       (1, 0, -1), (1, 0, 1), (1, 1, -1), (1, 1, 0),
                       (1, 1, 1)
-                      ]
+                    ]
+        self.action_set = {(-1, -1, -1) : 0, (-1, -1, 0) : 1, (-1, -1, 1) : 2, (-1, 0, -1) : 3, 
+                      (-1, 0, 0) : 4, (-1, 0, 1) : 5, (-1, 1, -1) : 6, (-1, 1, 0) : 7,
+                      (-1, 1, 1) : 8, (0, -1, -1) : 9, (0, -1, 0) : 10, (0, -1, 1) : 11,
+                      (0, 0, -1) : 12, (0, 0, 1) : 13, (0, 1, -1) : 14, (0, 1, 0) : 15,
+                      (0, 1, 1) : 16, (1, -1, -1) : 17, (1, -1, 0) : 18, (1, -1, 1) : 19,
+                      (1, 0, -1) : 20, (1, 0 , 0) : 21, (1, 0, 1) : 22, (1, 1, -1) : 23, (1, 1, 0) : 24,
+                      (1, 1, 1) : 25}
+        self.width = width
+        self.height = height
+        self.depth = depth
         self.s_start = None
         self.s_goal = None
         self.obs = None
@@ -195,6 +312,12 @@ class AStar_3D:
 
     def is_collision(self, s_start, s_end):
         if s_start in self.extended_obs or s_end in self.extended_obs:
+            return True
+        if s_start[0] < 0 or s_start[0] >= self.width or s_start[1] < 0 or s_start[1] >= self.height or s_start[2] < 0 or s_start[2] >= self.depth:
+            return True
+        if s_end[0] < 0 or s_end[0] >= self.width or s_end[1] < 0 or s_end[1] >= self.height or s_end[2] < 0 or s_end[2] >= self.depth:
+            return True
+        if s_end in self.extended_obs or s_end in self.obs:
             return True
         return False
 
@@ -236,12 +359,13 @@ class AStar_3D:
         return [(s[0] + u[0], s[1] + u[1], s[2] + u[2]) for u in self.u_set]
 
     def extract_path(self, PARENT):
-        path = [self.s_goal]
+        path = []
         s = self.s_goal
         while True:
-            s = PARENT[s]
-            path.append(s)
-
+            point = PARENT[s]
+            (x , y, z) = (point[0] - s[0], point[1] - s[1], point[2] - s[2])
+            s = point
+            path.append(self.action_set.get((x,y,z)))
             if s == self.s_start:
                 break
         return list(path)

@@ -19,7 +19,8 @@ class AStar_2D:
 
         self.u_set = [(-1, 0), (-1, 1), (0, 1), (1, 1),
                       (1, 0), (1, -1), (0, -1), (-1, -1)]
-
+        self.action_set = {(-1,0) : 0, (-1,1) : 1, (0, 1) : 2, (1,1) : 3,
+                           (1,0) : 4, (1,-1) : 5, (0, -1) : 6, (-1, -1) : 7}
         self.s_start = None
         self.s_goal = None
         self.obs = None  # position of obstacles
@@ -32,7 +33,7 @@ class AStar_2D:
         self.width = width
         self.height = height
 
-    def searching(self, s_start: tuple, s_goal: tuple, obs, extended_obs, worker_id):
+    def searching(self, s_start: tuple, s_goal: tuple, obs, extended_obs):
         """
         A_star Searching.
         :return: path, visited order
@@ -138,16 +139,8 @@ class AStar_2D:
         if s_end[0] < 0 or s_end[0] > self.width or s_end[1] < 0 or s_end[1] > self.height:
             return True
             
-        if s_start[0] != s_end[0] and s_start[1] != s_end[1]:
-            if s_end[0] - s_start[0] == s_start[1] - s_end[1]:
-                s1 = (min(s_start[0], s_end[0]), min(s_start[1], s_end[1]))
-                s2 = (max(s_start[0], s_end[0]), max(s_start[1], s_end[1]))
-            else:
-                s1 = (min(s_start[0], s_end[0]), max(s_start[1], s_end[1]))
-                s2 = (max(s_start[0], s_end[0]), min(s_start[1], s_end[1]))
-
-            if s1 in self.extended_obs or s2 in self.extended_obs:
-                return True
+        if s_end in self.obs or s_end in self.extended_obs:
+            return True
 
         return False
 
@@ -167,16 +160,16 @@ class AStar_2D:
         :return: The planning path
         """
 
-        path = [self.s_goal]
+        
         s = self.s_goal
-
+        path = [s]
         while True:
-            s = PARENT[s]
-            path.append(s)
-
+            p = PARENT[s]
+            key = (p[0] - s[0], p[1] - s[1])
+            path.append(p)
+            s = p
             if s == self.s_start:
                 break
-
         return list(path)
 
     def heuristic(self, s):
