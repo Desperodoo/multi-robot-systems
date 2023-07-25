@@ -148,7 +148,7 @@ class Sensor:
 def test_lidar_simulator():
     # 创建一个2D地图
     map_size = (100, 100)
-    global_map = OccupancyGridMap(is3D=False)
+    global_map = OccupancyGridMap(is3D=False, boundaries=map_size)
 
     # 在地图上设置障碍物
     grid_map_vis = np.ones(map_size)
