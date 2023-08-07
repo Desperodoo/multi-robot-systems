@@ -361,6 +361,7 @@ class AStar_3D:
     def get_neighbor(self, s):
         return [(s[0] + u[0], s[1] + u[1], s[2] + u[2]) for u in self.u_set]
 
+    '''
     def extract_path(self, PARENT):
         path = []
         s = self.s_goal
@@ -372,11 +373,12 @@ class AStar_3D:
             if s == self.s_start:
                 break
         return list(path)
-
-    def searching(self, s_start: tuple, s_goal: tuple, extended_obs):
+'''
+    def searching(self, s_start: tuple, s_goal: tuple, obs, extended_obs):
         self.s_start = s_start
         self.s_goal = s_goal
         self.extended_obs = extended_obs
+        self.obs = obs
         self.OPEN = []
         self.CLOSED = []
         self.PARENT = dict()
