@@ -1,6 +1,6 @@
 from Occupied_Grid_Map import OccupiedGridMap
-from Occupied_Grid_Map import AStar_3D
 from astar import AStar_2D
+from astar import AStar_3D
 import math
 import matplotlib.pyplot as plt
 import numpy as np

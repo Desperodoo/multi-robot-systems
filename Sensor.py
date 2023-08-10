@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 import matplotlib.pyplot as plt
-from Occupied_Grid_Map import OccupancyGridMap
+from Occupied_Grid_Map import OccupiedGridMap
 
 
 def bresenham_line(x0, y0, x1, y1):
@@ -107,7 +107,7 @@ class Sensor:
         self.num_beams = num_beams
         self.radius = radius
 
-    def get_local_sensed_map(self, occupancy_grid_map: OccupancyGridMap, pos: tuple, direction: float):
+    def get_local_sensed_map(self, occupancy_grid_map: OccupiedGridMap, pos: tuple, direction: float):
         """
         Get local sensed map through ray casting algorithm
         @param occupancy_grid_map: map object providing pos translation and occupancy check method, also providing resolution information
@@ -118,37 +118,35 @@ class Sensor:
         pos = np.array(occupancy_grid_map.get_pos(pos))
         beam_angles = np.linspace(direction - self.fov / 2, direction + self.fov / 2, self.num_beams)
         beam_directions = np.column_stack((np.cos(beam_angles), np.sin(beam_angles)))
-
+        print(beam_directions)
         beam_ranges = np.full(self.num_beams, self.radius)
         obstacle_positions = []
         # TODO: get from OccupancyGridMap
         local_map = np.full((100, 100), self.MAP_UNCHECKED)
-
+        obstacle_direction = []
         for i, beam_direction in enumerate(beam_directions):
             start_point = pos
             end_point = occupancy_grid_map.get_pos(pos + beam_direction * self.radius)
 
-            ray_indices = bresenham_line(start_point[0], start_point[1], end_point[0], end_point[1])
-
+            ray_indices = bresenham_line(start_point[0], start_point[1], end_point[0] - 1, end_point[1] - 1)
             for index in ray_indices:
-                if occupancy_grid_map.get_map().get(index) is not None:
+                if occupancy_grid_map.get_map()[index] != 0:
                     beam_ranges[i] = np.linalg.norm(index - start_point)
                     obstacle_positions.append(occupancy_grid_map.index_to_pos(index))
                     local_map[index] = 1
                     local_map[index] = self.MAP_OCCUPIED
+                    obstacle_direction.append(np.arcsin(beam_direction[0]))
                     break
                 else:
                     local_map[index] = self.MAP_FREE
-            else:
-                obstacle_positions.append(None)
 
-        return beam_ranges, local_map, obstacle_positions
+        return beam_ranges, local_map, obstacle_positions, obstacle_direction
 
 
 def test_lidar_simulator():
     # 创建一个2D地图
     map_size = (100, 100)
-    global_map = OccupancyGridMap(is3D=False, boundaries=map_size)
+    global_map = OccupiedGridMap(is3D=False, boundaries=map_size)
 
     # 在地图上设置障碍物
     grid_map_vis = np.ones(map_size)
@@ -159,7 +157,7 @@ def test_lidar_simulator():
 
 
     is3D = False
-    fov = np.pi
+    fov = 2 * np.pi 
     # 创建 Sensor 对象
     lidar_simulator = Sensor(num_beams=36, radius=50, horizontal_fov=fov)
 
@@ -169,11 +167,11 @@ def test_lidar_simulator():
 
 
     # 获取每条激光束的距离信息
-    beam_ranges, local_map, obstacle_positions = lidar_simulator.get_local_sensed_map(global_map, pos, direction)
-
+    beam_ranges, local_map, obstacle_positions,bream_direction = lidar_simulator.get_local_sensed_map(global_map, pos, direction)
     # 可视化结果
+    print(obstacle_positions)
+    print(bream_direction)
     plt.figure(figsize=(6, 6))
-
     plt.imshow(grid_map_vis, cmap='gray', origin='lower')
     plt.plot(pos[0], pos[1], 'ro')
     plt.arrow(pos[0], pos[1], np.cos(direction), np.sin(direction), color='r', width=0.1, head_width=0.3, alpha=0.5)
@@ -186,7 +184,7 @@ def test_lidar_simulator():
     plt.ylabel('Y')
     plt.title('Sensor Simulation')
     plt.grid(True)
-    plt.savefig('sensor')
+    plt.show()
 
 
 if __name__ == '__main__':
