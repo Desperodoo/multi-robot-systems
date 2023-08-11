@@ -165,7 +165,6 @@ def test_lidar_simulator():
     pos = (50, 50)
     direction = 0.0
 
-
     # 获取每条激光束的距离信息
     beam_ranges, local_map, obstacle_positions,bream_direction = lidar_simulator.get_local_sensed_map(global_map, pos, direction)
     # 可视化结果

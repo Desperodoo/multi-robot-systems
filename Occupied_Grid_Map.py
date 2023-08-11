@@ -162,8 +162,7 @@ class OccupiedGridMap:
         :param extended: whether consider extended obstacles or not
         :return: True if cell is occupied with obstacle, False else
         """
-        point = self.get_pos(pos)
-        return self.grid_map.get(point) is None
+        return self.get_point_info(pos) == 0
         # if not self.in_bounds(cell=(x, y)):
         #    raise IndexError("Map index out of bounds")
 
