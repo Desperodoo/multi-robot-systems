@@ -92,7 +92,7 @@ class OccupiedGridMap:
                         if self.in_bound((x,y)):
                              self.set_obstacle([x,y])
     # convert the float point into the int point
-    def initailize_obstacle(self, num, center = 20):
+    def initailize_obstacle(self, num, center = 5):
         if self.is3D:
             shape_default = [(3,3,3),(3,3),(3)]
             shape = ['r','c','s']

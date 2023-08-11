@@ -118,7 +118,6 @@ class Sensor:
         pos = np.array(occupancy_grid_map.get_pos(pos))
         beam_angles = np.linspace(direction - self.fov / 2, direction + self.fov / 2, self.num_beams)
         beam_directions = np.column_stack((np.cos(beam_angles), np.sin(beam_angles)))
-        print(beam_directions)
         beam_ranges = np.full(self.num_beams, self.radius)
         obstacle_positions = []
         # TODO: get from OccupancyGridMap
@@ -130,7 +129,7 @@ class Sensor:
 
             ray_indices = bresenham_line(start_point[0], start_point[1], end_point[0] - 1, end_point[1] - 1)
             for index in ray_indices:
-                if occupancy_grid_map.get_map()[index] != 0:
+                if not occupancy_grid_map.in_bound(index) or occupancy_grid_map.get_map()[index] == 1:
                     beam_ranges[i] = np.linalg.norm(index - start_point)
                     obstacle_positions.append(occupancy_grid_map.index_to_pos(index))
                     local_map[index] = 1
