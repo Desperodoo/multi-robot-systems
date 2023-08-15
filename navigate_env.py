@@ -3,7 +3,9 @@ from Sensor import Sensor
 import numpy as np
 import random
             
-
+"""
+agent in the env
+"""
 class Pursuer():
     def __init__(self, idx:int, x:int, y:int, config):
         self.time_step = 0
@@ -94,13 +96,18 @@ class navigate_env:
         
 
     def init_client(self):
+        """
+        initailize the agent in the occupied in the occupancy grid map 
+        1. pick a center point randomly 
+        2. init the agent around the center point with normal distribution 
+        """
         center_x = random.randrange(self.map_size[0])
         center_y = random.randrange(self.map_size[1])
         for i in range(self.agent_num):
-            point_x = np.random.normal(center_x,self.spread,1).clip(0, self.map_size[0] - 1)
-            point_y = np.random.normal(center_y,self.spread,1).clip(0, self.map_size[1] - 1)
-            agent = Pursuer(i,point_x[0],point_y[0],self.agent_config)
-            self.occupaied_map.set_map_info((point_x[0],point_y[0]), 2)
+            point_x = np.random.normal(center_x,self.spread,1).clip(0, self.map_size[0] - 1)[0]
+            point_y = np.random.normal(center_y,self.spread,1).clip(0, self.map_size[1] - 1)[0]
+            agent = Pursuer(i,point_x,point_y,self.agent_config)
+            self.occupaied_map.set_map_info((point_x,point_y), 2)
             self.agent_list.append(agent)
             
 
@@ -149,12 +156,21 @@ class navigate_env:
         sum_force_y = 0
         for idx in range(len(direction)):
             distance = np.sqrt(abs(obstacle_positions[idx][0] - pos_x) ** 2 + abs(obstacle_positions[idx][1] - pos_y) ** 2)
+            # get the force from X and Y 
             value_x = self.field_cof * distance * np.sin(direction[idx])
             value_y = self.field_cof * distance * np.cos(direction[idx])
             sum_force_x += value_x
             sum_force_y += value_y
+        # compute the sum force 
         total_force = np.sqrt(sum_force_x ** 2 + sum_force_y ** 2) * self.field_cof
-        fin_angle = np.arcsin(sum_force_x / sum_force_y)
+        # find the angle 
+        fin_angle = 0
+        if sum_force_y == 0:
+            fin_angle = 0
+        elif sum_force_x == 0:
+            fin_angle = np.pi / 2
+        else:
+            fin_angle = np.arcsin(sum_force_x / sum_force_y)
         return total_force, fin_angle
     
     def is_collision(self, x, y):
@@ -167,6 +183,7 @@ class navigate_env:
         beam_ranges, local_map, obstacle_positions,bream_direction = agent.slam.get_local_sensed_map(self.occupaied_map, (agent.x, agent.y), 0.0)
         return [agent.x, agent.y, agent.phi, agent.v], obstacle_positions
     
+    # 返回一个所有AGENT共享的全局地图
     def communicate(self):
         agent_states = []
         for idx in range(self.agent_num):
@@ -176,7 +193,7 @@ class navigate_env:
             for pos in obstacle_pos:
                 x = round(pos[0])
                 y = round(pos[1])
-                self.agent_map[x][y] = 1
+                self.agent_map[x - 1][y - 1] = 1
         return agent_states
     
     def step(self,action_list):
@@ -187,11 +204,11 @@ class navigate_env:
             force, angle = self.get_force_field(agent.x,agent.y)
             x, y, v = agent.step(0.5,action_list[idx], force,angle)
             if not self.is_collision(x,y):
-                self.occupaied_map.set_map_info((agent.x[0], agent.y[0]),0)
+                self.occupaied_map.set_map_info((agent.x, agent.y),0)
                 agent.x = x
                 agent.y = y
                 agent.v = v
-                self.occupaied_map.set_map_info((agent.x[0], agent.y[0]),2)
+                self.occupaied_map.set_map_info((agent.x, agent.y),2)
                 reward.append(self.get_reward(False,agent,(x,y)))
             else:
                 reward.append(self.get_reward(True,None,None))
