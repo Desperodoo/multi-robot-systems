@@ -1,6 +1,6 @@
-from Occupied_Grid_Map import OccupancyGridMap
-from Occupied_Grid_Map import AStar_3D
+from Occupied_Grid_Map import OccupiedGridMap
 from astar import AStar_2D
+from astar import AStar_3D
 import math
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +10,7 @@ distance = math.hypot(2, 2, 2)
 print(distance)
 is3D = True
 if is3D:
-    map = OccupancyGridMap(is3D=True, boundaries=(20, 20, 20))
+    map = OccupiedGridMap(is3D=True, boundaries=(20, 20, 20))
     map.initailize_obstacle(10, 10)
     print(map.grid_map)
     star = AStar_3D(20, 20, 20)
@@ -21,9 +21,9 @@ if is3D:
     y = []
     z = []
     for pos in map.obstacles:
-        x.append(pos[0])
-        y.append(pos[1])
-        z.append(pos[2])
+        x.append(float(pos[0]))
+        y.append(float(pos[1]))
+        z.append(float(pos[2]))
     x = np.array(x)
     y = np.array(y)
     z = np.array(z)
@@ -32,7 +32,7 @@ if is3D:
     plt.scatter(x, y, z)
     plt.savefig('3d_map_test.png')
 else:
-    map = OccupancyGridMap(is3D=False, boundaries=(20, 20))
+    map = OccupiedGridMap(is3D=False, boundaries=(20, 20))
     map.initailize_obstacle(10, 10)
     print(map.grid_map)
     star = AStar_2D(20, 20)
