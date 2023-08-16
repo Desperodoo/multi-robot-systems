@@ -12,7 +12,7 @@ from abc import ABCMeta,abstractmethod
 
 
 class BaseEnv(metaclass=ABCMeta):
-    def __init__(self):
+    def __init__(self, env_config):
         cfg = {
             'p_vmax': 0.5,
             'e_vmax': 1,
