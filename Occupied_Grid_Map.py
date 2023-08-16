@@ -129,7 +129,7 @@ class OccupiedGridMap:
             point = (round(pos[0]), round(pos[1]))  # make sure pos is int
         return point
     
-    def get_point_info(self,pos:tuple) -> int:
+    def get_point_info(self, pos: tuple) -> int:
         if self.is3D:
             x, y, z = self.round_up(pos)
             return self.grid_map[x][y][z]
