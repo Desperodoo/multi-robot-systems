@@ -278,7 +278,7 @@ class Pursuer(Agent):
     ):
         super().__init__(
             x=x, y=y, z=z, vx=vx, vy=vy, vz=vz, 
-            vmax=config.vmax, time_step=config.time_step, tau=config.tau, DOF=config.DOF,
+            vmax=config.vmax, step_size=config.step_size, tau=config.tau, DOF=config.DOF,
             sen_range=config.sen_range, comm_range=config.comm_range
         )
 
@@ -308,7 +308,7 @@ class Evader(Agent):
         else:
             self.astar = AStar_3D()
         
-    def step(self, step_size, a):
+    def step(self, a):
         # a belong to [-1, 1]
         v = self.v_max
         sign_a_phi = np.sign(a * self.phi)  # 判断同号异号
@@ -332,8 +332,8 @@ class Evader(Agent):
             self.phi += 2 * np.pi
 
         if self.active:
-            x = self.x + v * np.cos(self.phi) * step_size
-            y = self.y + v * np.sin(self.phi) * step_size
+            x = self.x + v * np.cos(self.phi) * self.step_size
+            y = self.y + v * np.sin(self.phi) * self.step_size
             # TODO:
             if self.grid_map.in_bounds((int(x), int(y))):
                 if self.grid_map.is_unoccupied((int(x), int(y))):
@@ -341,18 +341,19 @@ class Evader(Agent):
                     self.y = y
                     self.v = v
 
-    def replan(self, p_states, time_step, worker_id):
+    def replan(self, p_states, worker_id):
         # return vertices and slam_map
         current_x = round(self.x)
         current_y = round(self.y)
         
         extend_dis = 2
         
+        # TODO: to be adapted to Sensor class
         while extend_dis >= 2:
             slam_map, pred_map = self.slam.rescan(
                 global_position=(current_x, current_y),
                 moving_obstacles=p_states,
-                time_step=time_step,
+                time_step=self.step_size,
                 extend_dis=extend_dis
             )
 

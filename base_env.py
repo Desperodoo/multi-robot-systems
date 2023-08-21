@@ -9,21 +9,14 @@ from abc import abstractmethod
 from Occupied_Grid_Map import OccupiedGridMap
 from argparse import Namespace
 from abc import ABCMeta,abstractmethod
-
+from agent import *
 
 class BaseEnv(metaclass=ABCMeta):
-    def __init__(self, env_config):
+    def __init__(self, env_config, defender_config, attacker_config):
         # Agent config
-        self.defender_class = env_config.defender_class
-        self.attacker_class = env_config.attacker_class
+        self.defender_class = eval(env_config.defender_class)
+        self.attacker_class = eval(env_config.attacker_class)
         
-        self.vel_max_d = env_config.vel_max_d
-        self.vel_max_a = env_config.vel_max_a
-        self.tau = env_config.tau
-        
-        self.sen_range = env_config.sen_range
-        self.comm_range = env_config.comm_range
-        self.collision_radius = env_config.collision_radius
         # Simulation config
         self.time_step = 0
         self.n_episode = 0
@@ -34,13 +27,17 @@ class BaseEnv(metaclass=ABCMeta):
         self.num_defender = env_config.num_defender
         self.num_attacker = env_config.num_attacker
 
+        self.env_config = env_config
+        self.defender_config = defender_config
+        self.attacker_config = attacker_config
+
     def init_map(self, map_config: Namespace):
         """parsed args 
 
         Args:
             map_config (Namespace): 
         """
-        num = map_config.obstacle_num
+        num = map_config.num_obstacle
         center = map_config.center
         self.occupied_map = OccupiedGridMap(is3D=self.is3D,boundaries=self.map_size)
         self.occupied_map.initailize_obstacle(num=num, center=center)
@@ -63,7 +60,7 @@ class BaseEnv(metaclass=ABCMeta):
             if inflated_map.is_unoccupied(target):
                 self.target.append(target)
     
-    def init_defender(self, min_dist: int, inflated_map: OccupiedGridMap, defender_config: dict):
+    def init_defender(self, min_dist: int, inflated_map: OccupiedGridMap):
         """initialize the defender
 
         Args:
@@ -102,7 +99,7 @@ class BaseEnv(metaclass=ABCMeta):
                 agent = self.defender_class(
                     x=pos[0], y=pos[1], z=pos[2],
                     vx=0., vy=0., vz=0.,
-                    config=defender_config                    
+                    config=self.defender_config                    
                 )
                 self.defender_list.append(agent)
                 inflated_map.set_moving_obstacle(pos)
@@ -110,7 +107,7 @@ class BaseEnv(metaclass=ABCMeta):
         
         return inflated_map
 
-    def init_attacker(self, inflated_map: OccupiedGridMap, is_percepted: bool, attacker_config: dict, target_list: list):
+    def init_attacker(self, inflated_map: OccupiedGridMap, is_percepted: bool, target_list: list):
         """initialize the attacker.
 
         Args:
@@ -134,7 +131,7 @@ class BaseEnv(metaclass=ABCMeta):
                                 x=pos[0], y=pos[1], z=pos[2],
                                 vx=0., vy=0., vz=0.,
                                 target=target_list[0],
-                                config=attacker_config 
+                                config=self.attacker_config 
                             )
                             self.attacker_list.append(attacker)
                             break
