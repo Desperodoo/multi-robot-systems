@@ -1,9 +1,11 @@
 import numpy as np
-from grid import OccupancyGridMap, SLAM
+from grid import OccupancyGridMap
 from abc import abstractmethod
 from astar import AStar_2D
 import math
 from Occupied_Grid_Map import AStar_3D
+from Sensor import Sensor
+from argparse import Namespace
 
 def intersect(line1, line2):
     (a1, a2) = line1[0]
@@ -124,11 +126,11 @@ class Radar:
 class Agent:
     def __init__(
         self, 
-        idx: int, time_step: float, tau: float, DOF: int,
+        time_step: float, tau: float, DOF: int,
         x: float, y: float, z: float, 
-        v: np.ndarray, theta: float, phi: float, 
-        d_v_lmt: float, d_theta_lmt: float, d_phi_lmt: float, v_max: float, 
-        sen_range: int, comm_range: int, global_map: OccupancyGridMap
+        vx: float, vy: float, vz: float, 
+        v_max: float, 
+        sen_range: int, comm_range: int
     ):
         """_summary_
 
@@ -140,66 +142,76 @@ class Agent:
             x (float): x position
             y (float): y position
             z (float): z position
-            v (np.ndarray): [vx, vy, vz]
+            vx (float): velocity in x-axis
+            vy (float): velocity in y-axis
+            vz (float): velocity in z-axis
             theta (float): the angle between velocity vector and z-axis
             phi (float): the angle between the x-y plane projection of velocity vector and x-axis
-            d_v_lmt (float): the limitation of dot velocity
-            d_theta_lmt (float): the limitation of dot theta
-            d_phi_lmt (float): the limitation of dot phi
             v_max (float): the max velocity
             sen_range (int): sensor range
             comm_range (int): communication range
-            global_map (OccupancyGridMap): map
         """
         self.time_step = time_step
         self.tau = tau
-        self.idx = idx
         self.DOF = DOF
         
         self.x = x
         self.y = y
         self.z = z
         
-        self.v = v
-        self.theta = theta
-        self.phi = phi
-        
-        self.d_v_lmt = d_v_lmt
-        self.d_theta_lmt = d_theta_lmt
-        self.d_phi_lmt = d_phi_lmt
+        self.vx = vx
+        self.vy = vy
+        self.vz = vz
         self.v_max = v_max
         
         self.sensor_range = sen_range
         self.comm_range = comm_range
-        self.grid_map = global_map
 
         self.active = True
-        self.slam = SLAM(global_map=global_map, view_range=self.sensor_range)
+        self.slam = Sensor(
+            num_beams=36,
+            radius=self.sensor_range,
+            horizontal_fov=2 * np.pi
+        )
+        
+        self.theta_list = [i * np.pi / 4 for i in range(0, 8)]
+        self.phi_list = [i * np.pi / 4 for i in range(-1, 2)]
+        
+        if self.DOF == 2:
+            self.actions_mat = [[np.cos(t), np.sin(t)] for t in self.theta_list]
+            self.actions_mat.append([0., 0.])
+        else:
+            self.actions_mat = [[np.cos(t), np.sin(t), np.cos(p)] for t in self.theta_list for p in self.phi_list]
+            self.actions_mat = self.actions_mat + [[0., 0., 0.], [0., 0., 1.], [0., 0., -1]]
+
 
     def step(self, action: int):
         """Transform discrete action to desired velocity
-
         Args:
             action (int): an int belong to [0, 1, 2, ..., 8] - 2D, or [0, 1, 2, ..., 26] - 3D
         """
-        if self.DOF == 2:
-            actions_mat = [[i, j] for i in range(-1, 2, 1) for j in range(-1, 2, 1)]
-        else:
-            actions_mat = [[i, j, k] for i in range(-1, 2, 1) for j in range(-1, 2, 1) for k in range(-1, 2, 1)]
+        desired_velocity = self.actions_mat[action] * self.v_max
+        self.dynamic(u=desired_velocity)
         
-        desired_velocity = actions_mat[action]
-        self.dynamic(u=desired_velocity)    
+    def apply_update(self, next_state):
+        if self.DOF == 2:
+            [self.x, self.y, self.vx, self.vy, self.theta] = next_state
+        else:
+            [self.x, self.y, self.z, self.vx, self.vy, self.vz, self.theta, self.phi] = next_state
 
-    def dynamic(self, u: float = 0, order: int = 1):
+    def dynamic(self, u: float = 0):
         """The dynamic of the agent is considered as a 1-order system with 2/3 DOF.
         The input dimension is the same as the state dimension.
 
         Args:
             u (float): The desired velocity.
-            order (int, optional): The order of the response characteristic of the velocity. Defaults to 1.
             # DOF (int, optional): Degree of freedom. Defaults to 2.
         """
-        self.v = u * (1 - np.exp(self.time_step / self.tau)) + self.v * np.exp(self.time_step / self.tau)
+        vx = u[0] * (1 - np.exp(self.time_step / self.tau)) + self.vx * np.exp(self.time_step / self.tau)
+        vy = u[1] * (1 - np.exp(self.time_step / self.tau)) + self.vy * np.exp(self.time_step / self.tau)
+        if self.DOF == 3:
+            vz = u[3] * (1 - np.exp(self.time_step / self.tau)) + self.vz * np.exp(self.time_step / self.tau)
+
         self.v = np.clip(self.v, -self.v_max, self.v_max)
         v_abs = np.linalg.norm(self.v)
         
@@ -223,14 +235,14 @@ class Agent:
 class Navigator(Agent):
     def __init__(
         self, 
-        idx: int, time_step: float, tau: float, DOF: int,
+        time_step: float, tau: float, DOF: int,
         x: float, y: float, z: float, 
         v: float, theta: float, phi: float, 
         d_v_lmt: float, d_theta_lmt: float, d_phi_lmt: float, v_max: float, 
         sen_range: int, comm_range: int, global_map: OccupancyGridMap,
     ):
         super().__init__(
-            idx=idx, time_step=time_step, tau=tau, DOF=DOF,
+            time_step=time_step, tau=tau, DOF=DOF,
             x=x, y=y, z=z,
             v=v, theta=theta, phi=phi, 
             d_v_lmt=d_v_lmt, d_theta_lmt=d_theta_lmt, d_phi_lmt=d_phi_lmt, v_max=v_max,
@@ -257,35 +269,27 @@ class Navigator(Agent):
         return obstacle_adj, evader_adj
             
 
-class Pursuer(Navigator):
+class Pursuer(Agent):
     def __init__(
         self, 
-        idx: int, time_step: float, tau: float, DOF: int,
         x: float, y: float, z: float, 
-        v: float, theta: float, phi: float, 
-        d_v_lmt: float, d_theta_lmt: float, d_phi_lmt: float, v_max: float, 
-        sen_range: int, comm_range: int, global_map: OccupancyGridMap,
-        raser_map: list  
+        vx: float, vy: float, vz: float, 
+        config: Namespace
     ):
         super().__init__(
-            idx=idx, time_step=time_step, tau=tau, DOF=DOF,
-            x=x, y=y, z=z,
-            v=v, theta=theta, phi=phi, 
-            d_v_lmt=d_v_lmt, d_theta_lmt=d_theta_lmt, d_phi_lmt=d_phi_lmt, v_max=v_max,
-            sen_range=sen_range, comm_range=comm_range, global_map=global_map
+            x=x, y=y, z=z, vx=vx, vy=vy, vz=vz, 
+            vmax=config.vmax, time_step=config.time_step, tau=config.tau, DOF=config.DOF,
+            sen_range=config.sen_range, comm_range=config.comm_range
         )
-        self.is_pursuer = True
 
 
 class Evader(Agent):
     def __init__(
         self, 
-        idx: int, time_step: float, tau: float, DOF: int,
         x: float, y: float, z: float, 
-        v: float, theta: float, phi: float, 
-        d_v_lmt: float, d_theta_lmt: float, d_phi_lmt: float, v_max: float, 
-        sen_range: int, comm_range: int, global_map: OccupancyGridMap,
-        target: list
+        vx: float, vy: float, vz: float, 
+        target: tuple,
+        config: Namespace
     ):
         """_summary_
 
@@ -293,16 +297,14 @@ class Evader(Agent):
             target (list): a 1x3 list representing the xyz position of the target
         """
         super().__init__(
-            idx=idx, time_step=time_step, tau=tau, DOF=DOF,
-            x=x, y=y, z=z,
-            v=v, theta=theta, phi=phi, 
-            d_v_lmt=d_v_lmt, d_theta_lmt=d_theta_lmt, d_phi_lmt=d_phi_lmt, v_max=v_max,
-            sen_range=sen_range, comm_range=comm_range, global_map=global_map
+            x=x, y=y, z=z, vx=vx, vy=vy, vz=vz, 
+            vmax=config.vmax, time_step=config.time_step, tau=config.tau, DOF=config.DOF,
+            sen_range=config.sen_range, comm_range=config.comm_range
         )
         self.is_pursuer = False
         self.target = target
-        if DOF == 2:
-            self.astar = AStar_2D(width=global_map.x_dim, height=global_map.y_dim)
+        if self.DOF == 2:
+            self.astar = AStar_2D(width=config.x_dim, height=config.y_dim)
         else:
             self.astar = AStar_3D()
         

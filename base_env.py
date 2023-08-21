@@ -14,6 +14,9 @@ from abc import ABCMeta,abstractmethod
 class BaseEnv(metaclass=ABCMeta):
     def __init__(self, env_config):
         # Agent config
+        self.defender_class = env_config.defender_class
+        self.attacker_class = env_config.attacker_class
+        
         self.vel_max_d = env_config.vel_max_d
         self.vel_max_a = env_config.vel_max_a
         self.tau = env_config.tau
@@ -60,14 +63,13 @@ class BaseEnv(metaclass=ABCMeta):
             if inflated_map.is_unoccupied(target):
                 self.target.append(target)
     
-    def init_defender(self, min_dist: int, inflated_map: OccupiedGridMap):
+    def init_defender(self, min_dist: int, inflated_map: OccupiedGridMap, defender_config: dict):
         """initialize the defender
 
         Args:
             min_dist (int): configure the density of the collective.
-            num_defender (int): 
-            inflated_map (OccupiedGridMap): inflated obstacle map
-
+            inflated_map (OccupiedGridMap): the inflated obstacle map
+            defender_config (dict): the configuration of the defender group
         Returns:
             inflated_map: occupied grid map with the defender as moving obstacle, and all obstacles are inflated.
         """
@@ -94,16 +96,21 @@ class BaseEnv(metaclass=ABCMeta):
                     
                     if (collision == 0) and (connectivity > 0) and (connectivity <= 2):
                         label = True
+            
             if label:
                 position_list.append(pos)
-                agent = Defender()
+                agent = self.defender_class(
+                    x=pos[0], y=pos[1], z=pos[2],
+                    vx=0., vy=0., vz=0.,
+                    config=defender_config                    
+                )
                 self.defender_list.append(agent)
                 inflated_map.set_moving_obstacle(pos)
                 inflated_map.extended_moving_obstacles(pos)
         
         return inflated_map
 
-    def init_attacker(self, inflated_map: OccupiedGridMap, is_percepted: bool):
+    def init_attacker(self, inflated_map: OccupiedGridMap, is_percepted: bool, attacker_config: dict, target_list: list):
         """initialize the attacker.
 
         Args:
@@ -123,36 +130,22 @@ class BaseEnv(metaclass=ABCMeta):
                         dist = np.linalg.norm([block[0] - pos[0], block[1] - pos[1]])
                         if dist < self.sensor_range:
                             position_list.append(pos)
-                            attacker = Attacker()
+                            attacker = self.attacker_class(
+                                x=pos[0], y=pos[1], z=pos[2],
+                                vx=0., vy=0., vz=0.,
+                                target=target_list[0],
+                                config=attacker_config 
+                            )
                             self.attacker_list.append(attacker)
                             break
     
     @abstractmethod
     def reset(self):
-        self.time_step = 0
-        self.n_episode += 1
-        
-        inflated_map = self.init_map(map_config=None)  # TODO: to be configured
-        self.init_target(num_target=None, inflated_map=inflated_map)  # TODO: to be configured
-        inflated_map = self.init_defender(num_defender=None, inflated_map=inflated_map)  # TODO: to be configured
-        # TODO: the target should be assigned to the attacker manually
-        self.init_attacker(num_attacker=None, inflated_map=inflated_map)  # TODO: to be configured
+        pass
 
     @abstractmethod
     def step(self, action):
-        self.time_step += 1
-        idx = 0
-        for pursuer_idx in self.p_idx:
-            pur = self.p_list[f'{pursuer_idx}']
-            pur.step(self.step_size, action[idx])
-            idx += 1
-
-        reward = self.reward(True)
-        self.update_agent_active()
-        done = True if self.get_done() or self.time_step >= self.episode_limit else False
-        info = None
-
-        return reward, done, info
+        pass
 
     def attacker_step(self, inflated_map):
         # Based On A-Star Algorithm
@@ -164,42 +157,12 @@ class BaseEnv(metaclass=ABCMeta):
 
     @abstractmethod
     def get_done(self):
-        for idx in self.e_idx:
-            agent = self.e_list[f'{idx}']
-            if np.linalg.norm([agent.x - self.target[0], agent.y - self.target[1]]) <= self.kill_radius:
-                return True
-
-        p_alive, e_alive = 0, 0
-        for idx in self.p_idx:
-            if self.p_list[f'{idx}'].active:
-                p_alive += 1
-        if p_alive == 0:
-            return True
-
-        for idx in self.e_idx:
-            if self.e_list[f'{idx}'].active:
-                e_alive += 1
-        if e_alive == 0:
-            return True
-
-        return False
+        pass
 
     @abstractmethod
     def defender_reward(self, agent_idx, is_pursuer=True):
-        reward = 0
-        is_collision = self.collision_detection(agent_idx=agent_idx, is_pursuer=is_pursuer, obstacle_type='evaders')
-        reward += sum(is_collision) * 1
-
-        inner_collision = self.collision_detection(agent_idx=agent_idx, is_pursuer=is_pursuer, obstacle_type='pursuers')
-        reward -= (sum(inner_collision) - 1) * 1
-
-        obstacle_collision = self.collision_detection(agent_idx=agent_idx, is_pursuer=is_pursuer, obstacle_type='static_obstacles')
-        reward -= (sum(obstacle_collision)) * 1
-        
-        if sum(obstacle_collision) + sum(inner_collision) - 1 > 0:
-            self.collision = True
-        return reward
-
+        pass
+    
     def get_reward(self):
         reward = []
         for defender in self.defender_list:
@@ -208,15 +171,7 @@ class BaseEnv(metaclass=ABCMeta):
 
     @abstractmethod
     def get_agent_state(self, is_pursuer, idx, relative=False):
-        agent = self.p_list[f'{idx}'] if is_pursuer else self.e_list[f'{idx}']
-        if relative:
-            phi = agent.phi
-            v = agent.v
-            vx = v * np.cos(phi)
-            vy = v * np.sin(phi)
-            return [agent.x, agent.y, vx, vy]
-        else:
-            return [agent.x, agent.y, agent.phi, agent.v]
+        pass
 
     def get_state(self, agent_type: str):
         """get states of the collective
@@ -233,30 +188,10 @@ class BaseEnv(metaclass=ABCMeta):
 
     @abstractmethod
     def communicate(self):
-        """
-        the obstacles have no impact on the communication between agents
-        :return: adj_mat: the adjacent matrix of the agents
-        """
-        p_states = self.get_agent_state(relative=False)
-        adj_mat = np.zeros(shape=(self.num_defender, self.num_defender))
-        for i, item_i in enumerate(p_states):
-            for j, item_j in enumerate(p_states):
-                if np.linalg.norm([item_i[0] - item_j[0], item_i[1] - item_j[1]]) <= self.p_comm_range:
-                    adj_mat[i, j] = 1
-        adj_mat = adj_mat.tolist()
-        return adj_mat
+        pass
 
-    def collision_detection(self, state, obstacle_type: str = 'obstacle'):
-        if obstacle_type == 'obstacle':
-            obstacles = self.global_obstacles  # list containing coordination of static obstacles
-        else:
-            obstacles = self.get_state(agent_type=obstacle_type)
-
-        is_collision = list()
-        for obstacle in obstacles:
-            if np.linalg.norm([obstacle[0] - state[0], obstacle[1] - state[1]]) <= self.collision_radius:
-                is_collision.append(1)
-            else:
-                is_collision.append(0)
-
-        return is_collision
+            
+        
+        
+        
+            
