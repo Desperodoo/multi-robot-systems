@@ -1,6 +1,8 @@
 from navigate_env import navigate_env
 from navigate_env import Pursuer
+from config import flocking_config
 import numpy as np
+
 
 
 
