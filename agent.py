@@ -1,10 +1,9 @@
 import numpy as np
 from grid import OccupancyGridMap
 from abc import abstractmethod
-from astar import AStar_2D
+from utils.astar import AStar_2D, AStar_3D
 import math
-from Occupied_Grid_Map import AStar_3D
-from Sensor import Sensor
+from utils.Sensor import Sensor
 from argparse import Namespace
 
 def intersect(line1, line2):
@@ -212,25 +211,25 @@ class Agent:
         if self.DOF == 3:
             vz = u[3] * (1 - np.exp(self.time_step / self.tau)) + self.vz * np.exp(self.time_step / self.tau)
 
-        self.v = np.clip(self.v, -self.v_max, self.v_max)
-        v_abs = np.linalg.norm(self.v)
+        v = np.linalg.norm([vx, vy, vz])
+        v = np.clip(v, 0, self.v_max)
         
-        if math.isclose(v_abs, 0, rel_tol=1e-3):
-            self.theta = 0
-            self.phi = 0
+        if math.isclose(v, 0, rel_tol=1e-3):
+            theta = 0
+            phi = 0
         else:
-            vx, vy, vz = self.v
-            self.theta = np.arccos(vz / (v_abs))
-            v_proj_xy = v_abs * np.sin(self.theta)
+            theta = np.arccos(vz / (v))
+            v_proj_xy = v * np.sin(theta)
             if math.isclose(v_proj_xy, 0, rel_tol=1e-3):
-                self.phi = 0
+                phi = 0
             else:
-                self.phi = np.sign(vy) * np.arccos(vx / v_proj_xy)
+                phi = np.sign(vy) * np.arccos(vx / v_proj_xy)
         
-        self.x += self.v[0] * self.time_step
-        self.y += self.v[1] * self.time_step
-        self.z += self.v[2] * self.time_step
+        x = self.x + vx * self.time_step
+        y = self.y + vy * self.time_step
+        z = self.z + vz * self.time_step
         
+        return [x, y, z, vx, vy, vz, ]
 
 class Navigator(Agent):
     def __init__(

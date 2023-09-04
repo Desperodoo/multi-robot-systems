@@ -1,7 +1,7 @@
 import time
 import numpy as np
 from numpy.linalg import norm
-from astar import AStar_2D
+from utils.astar import AStar_2D
 from copy import deepcopy
 import random
 import math
@@ -741,7 +741,7 @@ class ParticleEnv:
     def collision_detection(self, agent_idx, is_pursuer, obstacle_type: str = 'static_obstacles'):
         agent_state = self.get_agent_state(is_pursuer, agent_idx)
         if obstacle_type == 'static_obstacles':
-            obstacles = self.global_obstacles  # list containing coordination of static obstacles
+            obstacles = self.boundary_obstacles  # list containing coordination of static obstacles
         elif obstacle_type == 'pursuers':
             obstacles = self.get_team_state(is_pursuer=True, active=True)  # only active pursuer is referenced
         else:

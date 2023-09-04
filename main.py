@@ -2,7 +2,7 @@ from particle_env import ParticleEnv
 import time
 import random
 import numpy as np
-from gif_plotting import sim_moving
+from utils.gif_plotting import sim_moving
 from particle_env import ParticleEnv
 import os
 
