@@ -1,5 +1,4 @@
 import numpy as np
-from skimage.segmentation import find_boundaries
 import math
 import heapq
 import random

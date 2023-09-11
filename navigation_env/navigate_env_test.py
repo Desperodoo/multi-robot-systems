@@ -25,7 +25,7 @@ if __name__ == '__main__':
         "sen_range" : 10,
         "fov" : 2 * np.pi
     }
-    env = navigate_env(map_config=map_config,agent_config=agent_config)
+    env = navigate_env(map_config=map_config,agent_config=agent_config,flocking_config=flocking_config)
     env.reset()
     states, agent_map, reward, done = env.step([1,1])
     print(states)

@@ -6,7 +6,7 @@ class flocking_ago():
         self.separate_cof = config.separate_cof
         self.cohesion_cof = config.cohesion_cof
         self.alignment_cof = config.alignment_cof
-        self.max_force = config.max_force
+        self.desired_speed = config.max_force
         
     #planes, cohesion_weight, separation_weight, alignment_weight
     def flocking_algorithm(self,agents):
@@ -15,7 +15,7 @@ class flocking_ago():
 
         for agent in agents:
             # Find nearby planes within radar range
-            nearby_planes = self.find_nearby_planes(agent, agents)
+            nearby_planes = self.find_nearby_agent(agent, agents)
 
             # Calculate the desired speed and angle for cohesion, separation, and alignment
             desired_speed_cohesion, angle_cohesion = self.calculate_cohesion(agent, nearby_planes, self.cohesion_cof)
@@ -58,7 +58,7 @@ class flocking_ago():
             center_of_mass_y /= count
 
         # Calculate the desired speed to move toward the center of mass
-        desired_speed = self.desire_speed
+        desired_speed = self.desired_speed
 
         # Calculate the angle (direction) towards the center of mass
         angle = 0.0
@@ -88,15 +88,15 @@ class flocking_ago():
 
         return desired_speed * separation_weight, angle
 
-    def calculate_alignment(plane, nearby_planes, alignment_weight):
+    def calculate_alignment(self,agent, nearby_agents, alignment_weight):
         # Calculate the average speed and direction of nearby planes
         avg_speed_x = 0.0
         avg_speed_y = 0.0
         count = 0
 
-        for other_plane in nearby_planes:
-            avg_speed_x += other_plane.v * math.cos(math.atan2(other_plane.y - plane.y, other_plane.x - plane.x))
-            avg_speed_y += other_plane.v * math.sin(math.atan2(other_plane.y - plane.y, other_plane.x - plane.x))
+        for other_agent in nearby_agents:
+            avg_speed_x += other_agent.v * math.cos(math.atan2(other_agent.y - agent.y, other_agent.x - plane.x))
+            avg_speed_y += other_agent.v * math.sin(math.atan2(other_agent.y - agent.y, other_agent.x - plane.x))
             count += 1
 
         if count > 0:

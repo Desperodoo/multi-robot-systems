@@ -15,6 +15,6 @@ flocking_config.add_argument("--radius", type=float, default=2.0, help="the radi
 flocking_config.add_argument("--separate_cof",type=float, default=1, help="the cofficient of the separate varaible")
 flocking_config.add_argument("--cohesion_cof",type=float, default=1, help="the cofficient of the cohesion varaible")
 flocking_config.add_argument("--alignment_cof",type=float, default=1, help="the cofficient of the alignment varaible")
-
-
+flocking_config.add_argument("--max_force",type=float, default=1 )
+flocking_config = flocking_config.parse_args()
 

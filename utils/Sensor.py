@@ -1,8 +1,7 @@
 import math
-
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.Occupied_Grid_Map import OccupiedGridMap
+from Occupied_Grid_Map import OccupiedGridMap
 
 
 def bresenham_line(x0, y0, x1, y1):
