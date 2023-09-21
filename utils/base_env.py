@@ -6,7 +6,7 @@ from copy import deepcopy
 import random
 import math
 from abc import abstractmethod
-from utils.Occupied_Grid_Map import OccupiedGridMap
+from .Occupied_Grid_Map import OccupiedGridMap
 from argparse import Namespace
 from abc import ABCMeta,abstractmethod
 from agent import *
