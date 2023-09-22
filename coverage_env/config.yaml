@@ -1,0 +1,94 @@
+defaults:  
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled  
+  
+hydra:  
+  output_subdir: null  
+  run:  
+    dir: .
+
+main:
+
+env:
+  env_class:
+    _target_: environment.pursuit_evasion_game.pursuit_env.Pursuit_Env
+  name: 'Pursuit_Env'
+  state_dim: 4
+  action_dim: 9
+  client_class: Client
+  relay_class: Relay
+  max_steps: 100
+  num_client: 1
+  num_relay: 10
+  num_target: 1
+  step_size: 0.1
+  difficulty: 1
+sensor:
+  num_beams: 36
+map:
+  center: [30, 25]
+  map_size: [60, 55]
+  num_obstacle_block: 5
+  resolution: 1
+  variance: 10
+  max_num_obstacle: 336
+client:
+  DOF: 2
+  collision_radius: 0.5
+  comm_range: 16
+  sen_range: 8
+  step_size: 0.1
+  tau: 0.2
+  vmax: 3
+  extend_dis: 3
+relay:
+  DOF: 2
+  collision_radius: 0.5
+  comm_range: 16
+  sen_range: 8
+  step_size: 0.1
+  tau: 0.2
+  vmax: 2
+algo:
+  policy_class:
+    _target_: DHGN.gcn.GnnExtractor
+  agent_class:
+    _target_: DHGN.mappo_parallel.MAPPO
+  pretrain_model_cwd: './pretrain/experiment/pretrain_model_15'
+  learner_device: 'cuda'
+  worker_device: 'cpu'
+  evaluator_device: 'cpu'
+  # Learner
+  max_train_steps: 15000000
+  lr: 0.0005
+  gamma: 0.99
+  lamda: 0.95
+  epsilon: 0.05
+  epochs: 1
+  entropy_coef: 0.05
+  save_cwd: './model'
+  # Evaluator
+  # Worker
+  sample_epi_num: 1
+  # Tricks
+  use_adv_norm: true
+  use_agent_specific: true
+  use_grad_clip: true
+  use_lr_decay: true
+  use_orthogonal_init: true
+  use_reward_norm: true
+  use_spectral_norm: true
+  use_value_clip: true
+  set_adam_eps: true
+  # Policy
+  mlp_hidden_dim: 128
+  rnn_hidden_dim: 128
+  embedding_dim: 128
+  num_layers: 2
+  # DHGN
+  semantic_level_aggregator: pool
+  vertex_level_aggregator: pool
+  fcra_aggregator: pool
+  depth: 1
+  num_relation: 3
