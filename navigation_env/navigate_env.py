@@ -1,5 +1,7 @@
-from utils.Occupied_Grid_Map import OccupiedGridMap
-from utils.Sensor import Sensor
+import sys
+sys.path.append('utils')
+from Occupied_Grid_Map import OccupiedGridMap
+from Sensor import Sensor
 from flocking import flocking_ago
 from agent import Pursuer
 import numpy as np
@@ -135,7 +137,7 @@ class navigate_env:
         idx = 0
         reward = []
         flock_force, flock_angle = self.flock_ago.flocking_algorithm(self.agent_list)
-        for agent, force, angle in zip*(self.agent_list, flock_force,flock_angle):
+        for agent, force, angle in zip(self.agent_list, flock_force,flock_angle):
             force, angle = self.get_force_field(agent.x,agent.y)
             x, y, v = agent.step(0.5,action_list[idx], force,angle)
             x = x + force * np.cos(angle)

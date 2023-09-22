@@ -1,5 +1,7 @@
 import numpy as np
-from utils.Sensor import Sensor
+import sys
+sys.path.append('utils')
+from Sensor import Sensor
 
 class Pursuer():
     def __init__(self, idx:int, x:int, y:int, config):
