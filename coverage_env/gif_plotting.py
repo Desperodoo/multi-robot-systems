@@ -96,7 +96,8 @@ def sim_moving(step, width, height, obstacles, boundary_obstacles, box_width, n_
         ax3.set_aspect('equal')
         # draw evader start point and target point
         ax3.scatter(e_x[0], e_y[0], color='green', edgecolors='white', marker='s')
-        ax3.scatter(target[i][0], target[i][1], color='white', edgecolors='red', marker='^')
+        for tar_idx in range(len(target[i])):
+            ax3.scatter(target[i][tar_idx][0], target[i][tar_idx][1], color='white', edgecolors='red', marker='^')
         # for j in range(n_e):
         #     ax3.plot([e_x[0, j], target[0]], [e_y[0, j], target[1]], color='purple', linestyle='--', alpha=0.3)
 

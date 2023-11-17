@@ -11,8 +11,8 @@ UNOCCUPIED = 0
 class OccupiedGridMap:
     def __init__(self, is3D: bool, boundaries: tuple, new_grid=None, obstacles=None, exploration_setting='8N') -> None:
         self.is3D = is3D
-        self.boundaries = boundaries
-        if new_grid == None:
+        self.boundaries = boundaries  # the bound for each dimension
+        if new_grid is None:
             self.grid_map = np.zeros(shape=boundaries)
         else:
             self.grid_map = new_grid
@@ -151,11 +151,10 @@ class OccupiedGridMap:
     def in_bound(self, pos: tuple):
         if self.is3D:
             x, y, z = self.round_up(pos)
-            return x < self.boundaries[0] and x >= 0 and y < self.boundaries[1] and y >= 0 and z < self.boundaries[
-                2] and z >= 0
+            return self.boundaries[0] > x >= 0 and self.boundaries[1] > y >= 0 and self.boundaries[2] > z >= 0
         else:
             x, y = self.round_up(pos)
-            return x < self.boundaries[0] and x >= 0 and y < self.boundaries[1] and y >= 0
+            return self.boundaries[0] > x >= 0 and self.boundaries[1] > y >= 0
 
     def index_to_pos(self, index: tuple) -> "tuple[float, float]":
         return index
@@ -172,13 +171,15 @@ class OccupiedGridMap:
 
     def set_moving_obstacle(self, pos: list):
         if self.is3D:
-            for (x, y, z, phi, v) in pos:
+            # for (x, y, z, phi, v) in pos:
+            for (x, y, z) in pos:
                 point = self.get_pos((x, y, z))
                 self.grid_map[point] = OBSTACLE
                 if point not in self.moving_obstacles:
                     self.moving_obstacles.append(point)
         else:
-            for (x, y, phi, v) in pos:
+#             for (x, y, phi, v) in pos:
+            for (x, y) in pos:
                 point = self.get_pos((x, y))
                 self.grid_map[point] = OBSTACLE
                 if point not in self.moving_obstacles:
@@ -199,9 +200,9 @@ class OccupiedGridMap:
             for (x, y) in self.moving_obstacles:
                 for x_ in range(x - extend_dis, x + extend_dis + 1):  # extend
                     for y_ in range(y - extend_dis, y + extend_dis + 1):  # extend
-                        if self.in_bounds(cell=(x_, y_)):  # whether is bounded
+                        if self.in_bound((x_, y_)):  # whether is bounded
                             point = self.get_pos((x, y))
-                            self.occupancy_grid_map[point] = OBSTACLE
+                            self.set_obstacle(point)
                             if point not in self.moving_obstacles:
                                 if point not in self.ex_moving_obstacles:
                                     self.ex_moving_obstacles.append(point)

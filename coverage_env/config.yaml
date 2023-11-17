@@ -18,7 +18,7 @@ env:
   action_dim: 9
   client_class: Client
   relay_class: Relay
-  max_steps: 100
+  max_steps: 10
   num_client: 1
   num_relay: 10
   num_target: 1
@@ -29,27 +29,27 @@ sensor:
 map:
   center: [30, 25]
   map_size: [60, 55]
-  num_obstacle_block: 5
+  obstacle_num: 5
   resolution: 1
   variance: 10
-  max_num_obstacle: 336
+  max_obstacle_num: 64
 client:
   DOF: 2
   collision_radius: 0.5
   comm_range: 16
-  sen_range: 8
+  sens_range: 8
   step_size: 0.1
   tau: 0.2
-  vmax: 3
+  v_max: 3
   extend_dis: 3
 relay:
   DOF: 2
   collision_radius: 0.5
   comm_range: 16
-  sen_range: 8
+  sens_range: 8
   step_size: 0.1
   tau: 0.2
-  vmax: 2
+  v_max: 2
 algo:
   policy_class:
     _target_: DHGN.gcn.GnnExtractor

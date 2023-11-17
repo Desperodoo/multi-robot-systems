@@ -102,6 +102,14 @@ class Sensor:
     MAP_FREE = 0
 
     def __init__(self, num_beams: int, radius: float, horizontal_fov: float, vertical_fov=None):
+        """
+
+        Args:
+            num_beams:
+            radius:
+            horizontal_fov: in radian form
+            vertical_fov:
+        """
         self.fov = horizontal_fov
         self.phi = vertical_fov
         self.num_beams = num_beams
@@ -120,8 +128,7 @@ class Sensor:
         beam_directions = np.column_stack((np.cos(beam_angles), np.sin(beam_angles)))
         beam_ranges = np.full(self.num_beams, self.radius)
         obstacle_positions = []
-        # TODO: get from OccupancyGridMap
-        local_map = np.full((100, 100), self.MAP_UNCHECKED)
+        local_map = np.full(occupancy_grid_map.boundaries, self.MAP_UNCHECKED)
         obstacle_direction = []
         for i, beam_direction in enumerate(beam_directions):
             start_point = pos

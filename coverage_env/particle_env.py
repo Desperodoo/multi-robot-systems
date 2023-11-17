@@ -6,9 +6,9 @@ class ParticleEnv:
             'width': 50,
             'height': 50,
             'box_width': 1,
-            'p_sen_range': 6,
+            'p_sens_range': 6,
             'p_comm_range': 12,
-            'c_sen_range': 6,
+            'c_sens_range': 6,
             'c_comm_range': 12,
             # 'target': [17.5, 17.5],
             'kill_radius': 0.5,
@@ -28,9 +28,9 @@ class ParticleEnv:
         self.width = cfg['width']
         self.height = cfg['height']
         self.box_width = cfg['box_width']
-        self.p_sen_range = cfg['p_sen_range']
+        self.p_sens_range = cfg['p_sens_range']
         self.p_comm_range = cfg['p_comm_range']
-        self.c_sen_range = cfg['c_sen_range']
+        self.c_sens_range = cfg['c_sens_range']
         self.c_comm_range = cfg['c_comm_range']
 
         self.target = None
@@ -91,7 +91,7 @@ class ParticleEnv:
                     x=x, y=y, z=0, 
                     v=0, theta=0, phi=0,
                     d_v_lmt=self.c_v_lmt, d_theta_lmt=self.c_theta_lmt, d_phi_lmt=self.c_phi_lmt,
-                    v_max=self.c_vmax, sen_range=self.c_sen_range, comm_range=self.c_comm_range
+                    v_max=self.c_vmax, sens_range=self.c_sens_range, comm_range=self.c_comm_range
                 )
             )
             self.c_idx.append(idx)
@@ -150,7 +150,7 @@ class ParticleEnv:
                 v=self.e_vmax,
                 v_max=self.e_vmax,
                 v_lmt=self.e_v_lmt,
-                sen_range=self.e_sen_range,
+                sens_range=self.e_sens_range,
                 comm_range=self.e_comm_range,
                 global_map=deepcopy(self.global_map),
                 target=self.target
